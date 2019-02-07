@@ -42,27 +42,22 @@ def vote(request, question_id):
         selected_choice.save()
     return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
 
+class remove(generic.ListView):
+    template_name = 'polls/delete.html'
+    context_object_name = 'latest_question_list'
+
+    def get_queryset(self):
+        """Return the last five published questions."""
+        return Question.objects.order_by('-pub_date')
+
 def delete_question(request):
-    q = request.POST.get['question']
-    qname = ''
+    question = Question.objects.all()
     try:
-        qname += '\'' + Question.objects.get(pk=q.id).question_text + '\''
+        selected_question = Question.objects.get(id=request.POST['question'])
     except (KeyError, Question.DoesNotExist):
-        return render(request, 'polls/Question.html', { 'error_message': "You didn't select a question.",
+        return render(request, 'index.html', {
+            'error_message': "You didn't select a question.",
         })
     else:
-        qname = str(len(q)) + "Question"
-        question = Question.objects.get(pk=q.id)
-        question.delete()
-
-    # for i in q:
-    #     if(len(qname)<50):
-    #         qname += '\'' + Question.objects.get(pk=i).question_text + '\''
-    #     else:
-    #         qname = str(len(q)) + "Question"
-    #     question = Question.objects.get(pk=i)
-    #     question.delete()
-    return render(request, 'polls/Question.html',{'latest_question_list': question.objects.all(),'question_de': qname + 'Deleted'})
-
-def remove(request):
-    return render(request, 'polls/Question.html')
+        selected_question.delete()
+    return HttpResponseRedirect(reverse('polls:index'))
